@@ -113,6 +113,7 @@ enum class DecompileMode {
 	DEFAULT,
 	XML,
 	DEBUG_XML,
+	DEBUG_XML_IN,
 	OFFSET,
 	STATEMENTS,
 	DISASM,
@@ -159,6 +160,11 @@ static void Decompile(RCore *core, ut64 addr, DecompileMode mode, std::stringstr
 	bool showCasts = cfg_var_casts.GetBool (core->config);
 	r2c->setOptionNoCasts (!showCasts);
 	ApplyPrintCConfig (core->config, dynamic_cast<PrintC *>(arch.print));
+	if (mode == DecompileMode::DEBUG_XML_IN)
+	{
+		func->getSymbol()->saveXml(out_stream);
+		return;
+	}
 	if (func == nullptr) {
 		throw LowlevelError ("No function in Scope");
 	}
@@ -475,6 +481,9 @@ static void EnablePlugin(RCore *core) {
 
 static void runcmd(RCore *core, const char *input) {
 	switch (*input) {
+	case 'g': // "pdgd"
+		DecompileCmd (core, DecompileMode::DEBUG_XML_IN);
+		break;
 	case 'd': // "pdgd"
 		DecompileCmd (core, DecompileMode::DEBUG_XML);
 		break;

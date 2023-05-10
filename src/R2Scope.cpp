@@ -378,6 +378,32 @@ FunctionSymbol *R2Scope::registerFunction(RAnalFunction *fcn) const {
 
 	r_list_free (vars);
 
+	{
+		auto mapsymElement = child(symbollistElement, "mapsym");
+		auto symbolElement = child(mapsymElement, "symbol", {
+				{ "name", "randint" },
+				{ "typelock", "false" },
+				{ "namelock", "true" },
+				{ "cat", "-1" },
+		});
+		Datatype* type = arch->types->getBase(default_size, TYPE_UNKNOWN);
+		childType(symbolElement, type);
+		auto addr = arch->registerAddressFromR2Reg("rax");
+		if (addr.isInvalid()) {
+			arch->addWarning ("Failed to match register rax");
+		}
+		auto addrElement = child(symbolElement, "addr", {
+				{ "space", "register" },
+				{ "offset", hex(0x0) }
+		});
+		auto rangeList = child(addrElement, "rangelist");
+		child(rangeList, "range", {
+				{ "space", "ram" },
+				{ "first", hex(0x5bc242) },
+				{ "last", hex(0x5bc242) }
+		});
+	}
+
 	auto prototypeElement = child(functionElement, "prototype", {
 		{ "extrapop", to_string(extraPop) },
 		{ "model", proto ? proto->getName() : "unknown" }
@@ -399,7 +425,6 @@ FunctionSymbol *R2Scope::registerFunction(RAnalFunction *fcn) const {
 	// TODO: should we try to get the return address from r2's cc?
 
 	auto returnsymElement = child(prototypeElement, "returnsym");
-	childAddr (returnsymElement, "addr", returnAddr);
 
 	child (returnsymElement, "typeref", {
 		{ "name", "uint" }
